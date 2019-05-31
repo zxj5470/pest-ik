@@ -1,0 +1,41 @@
+program = _{ SOI ~ "\n"* ~ (stmt ~ "\n"*) * ~ stmt? ~ EOI }
+
+stmt = _{ expr | declStmt }
+
+COMMENT = _{ lineComment|blockComment }
+lineComment = {"//" ~ (!"\n" ~ ANY)*}
+blockComment = _{ "/*" ~ (blockComment | !"*/" ~ ANY)* ~ "*/" }
+
+
+expr = {
+    assgmtExpr
+//       monadicExpr
+}
+rValue = _{ decimal | integer | string | ident }
+
+infixChar = {"+"|"-"|"*"|"/"|"^"|">"|"<"|"=="|"!="|"is"}
+
+typeNotation = {":"~ident}
+
+assgmtExpr = { ident ~ ("=" ~ rValue)+ }
+
+declStmt = { modifier ~ ident ~ typeNotation? ~ "=" ~ rValue}
+    modifier = @{("var"|"val")}
+
+integer = @{ ASCII_DIGIT+ }
+
+decimal = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* ~("f"|"F")? }
+
+ident = @{ ("`"~regularPart~"`") | regularPart  }
+    regularPart = _{(ASCII_ALPHA | "_")*}
+
+string = ${ "\"" ~ inner ~ "\"" }
+inner = @{ char* }
+
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "a")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
+WHITESPACE = _{ " " | "\t" }
