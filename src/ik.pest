@@ -1,38 +1,51 @@
 program = _{ SOI ~ "\n"* ~ (stmt ~ "\n"*) * ~ stmt? ~ EOI }
 
-stmt = _{ expr | declStmt }
+COMMENT = _{ lineComment | blockComment }
+    lineComment = _{"//" ~ (!"\n" ~ ANY)*}
+    blockComment = _{ "/*" ~ (blockComment | !"*/" ~ ANY)* ~ "*/" }
 
-COMMENT = _{ lineComment|blockComment }
-lineComment = {"//" ~ (!"\n" ~ ANY)*}
-blockComment = _{ "/*" ~ (blockComment | !"*/" ~ ANY)* ~ "*/" }
-
+stmt = _{
+    assgmtExpr |
+    declStmt |
+    curryCall |
+    functionCall
+}
 
 expr = {
-    assgmtExpr
-//       monadicExpr
+    curryCall|
+    functionCall |
+    isExpr |
+    infixExpr
 }
-rValue = _{ decimal | integer | string | ident }
 
-infixChar = {"+"|"-"|"*"|"/"|"^"|">"|"<"|"=="|"!="|"is"}
+// TODO
+curryCall = {functionCall ~ ("(" ~ exprList? ~ ")")+}
 
-typeNotation = {":"~ident}
+functionCall = { functionCaller? ~ ident ~ "(" ~ exprList? ~ ")"}
+    functionCaller = {(ident ~ ".")+}
+    exprList = { expr ~ ("," ~ expr)*}
 
-assgmtExpr = { ident ~ ("=" ~ rValue)+ }
+rValue = _{ decimal | integer | string | boolean | ident }
+infixExpr = {rValue ~ (infixChar ~ expr)?}
+isExpr  = {infixExpr ~ "is" ~ ident}
+infixChar = @{"+"|"-"|"*"|"/"|"^"|">"|"<"|"=="|"!="}
+// infixExpr = {rValue ~ (infixChar ~ rValue)*}
 
-declStmt = { modifier ~ ident ~ typeNotation? ~ "=" ~ rValue}
-    modifier = @{("var"|"val")}
+typeNotation = {":" ~ ident}
+
+assgmtExpr = { ident ~ ("=" ~ expr)+ }
+
+declStmt = { modifier ~ ident ~ typeNotation? ~ "=" ~ expr}
+    modifier = {("var"|"val")}
 
 integer = @{ ASCII_DIGIT+ }
-
 decimal = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* ~("f"|"F")? }
-
 ident = @{ ("`"~regularPart~"`") | regularPart  }
-    regularPart = _{(ASCII_ALPHA | "_")*}
-
-string = ${ "\"" ~ inner ~ "\"" }
-inner = @{ char* }
-
-char = {
+    regularPart = _{(ASCII_ALPHA | "_") ~ (ASCII_DIGIT|ASCII_ALPHA | "_")*}
+string = @{ "\"" ~ inner ~ "\"" }
+boolean = @{"false"|"true"}
+inner = _{ char* }
+char = _{
     !("\"" | "\\") ~ ANY
     | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "a")
     | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
