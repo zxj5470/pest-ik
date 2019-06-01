@@ -14,12 +14,11 @@
 和唱跳Rap真的没啥关系……
   
 # 暂时支持的语法
-- [x] 定义
-- [x] 赋值
-- [x] 注释（单行、多行及嵌套）
-- [x] +-*/
-- [x] 中缀表达式
-- [x] 函数调用（甚至还可以珂里化）（列表的解析还没做）
+- [x] Definition (unicode support)
+- [x] Assign
+- [x] Comment（单行、多行及嵌套）
+- [x] Infix expression (+、-、*、/、isExpression)
+- [x] 函数调用（甚至还可以珂里化，能解析但是还没在AST里面写）（列表的解析还没做）
 
 ## 基本类型
 - [x] Boolean (bool)

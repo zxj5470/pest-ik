@@ -19,6 +19,7 @@ pub enum AstNode {
     Double(f64),
     Ident(String),
     String(String),
+
     FunctionCall {
         caller: String,
         ident: String,
@@ -29,7 +30,7 @@ pub enum AstNode {
         ident: String,
         expr: Box<AstNode>,
     },
-    GlobalDecl {
+    TopLevelDecl {
         modifier: String,
         typ: String,
         ident: String,
@@ -123,16 +124,20 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
         Rule::declStmt => {
             let mut pair = pair.into_inner();
             let modifier = pair.next().unwrap().as_str();// var val
+
             let mut ident = pair.next().unwrap().as_str();
-            let third_expr = pair.next().unwrap();// :Type or expr after `=`
-            let mut type_str;
+
+            ident = ident.trim_matches('`');
+//            let string = ident.chars().collect::<Vec<_>>();
+//            let first = string.first().unwrap();
+//            let last = string.last().unwrap();
+//            if first == &'`' && last == &'`' {
+//                ident = ident.trim_matches('`');
+//            }
+
             let expr;
-
-            let str = ident;
-            if &str[0..1] == "`" && &str[str.len() - 1..str.len()] == "`" {
-                ident = &str[1..str.len() - 1]
-            }
-
+            let mut type_str;
+            let third_expr = pair.next().unwrap();// :Type or expr after `=`
             if third_expr.as_rule() == Rule::typeNotation {
                 let str = third_expr.as_str();
                 let str = &str[1..str.len()];
@@ -142,7 +147,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
                 expr = build_ast_from_expr(third_expr);
                 type_str = get_type_from(&expr);
             }
-            AstNode::GlobalDecl {
+            AstNode::TopLevelDecl {
                 modifier: String::from(modifier),
                 typ: type_str,
                 ident: String::from(ident),
@@ -193,6 +198,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
 
 fn get_type_from(ast: &AstNode) -> String {
     match ast {
+        AstNode::Ident(_)=> String::from("<unknown>"),
         AstNode::IsExpr { a: _, b: _ } => String::from("Boolean"),
         AstNode::Infix { a: _, op: _, b: _ } => String::from("<unknown>"),
         _ => {

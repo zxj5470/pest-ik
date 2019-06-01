@@ -1,4 +1,4 @@
-program = _{ SOI ~ "\n"* ~ (stmt ~ "\n"*) * ~ stmt? ~ EOI }
+program = _{ SOI ~ NEWLINE* ~ (stmt ~ NEWLINE*) * ~ NEWLINE? ~ EOI }
 
 COMMENT = _{ lineComment | blockComment }
     lineComment = _{"//" ~ (!"\n" ~ ANY)*}
@@ -40,8 +40,13 @@ declStmt = { modifier ~ ident ~ typeNotation? ~ "=" ~ expr}
 
 integer = @{ ASCII_DIGIT+ }
 decimal = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* ~("f"|"F")? }
-ident = @{ ("`"~regularPart~"`") | regularPart  }
-    regularPart = _{(ASCII_ALPHA | "_") ~ (ASCII_DIGIT|ASCII_ALPHA | "_")*}
+ident = @{ ("`"~ unescaped ~"`") | regularPart  }
+    unescaped = _{ (simpleChar | ASCII_DIGIT | singleChar )*} // but Kotlin doesn't support an indentifier with `:`
+        simpleChar = _{ "!" | '#'..'/'/*35-47*/ | '<'..'?'/*58-63*/ | '['..'^' | '{'..'~'}
+    regularPart = _{ singleChar ~ ( ASCII_DIGIT | singleChar)*}
+    singleChar = _{ASCII_ALPHA | "_"|  unicode}
+//         unicode = _{ '\u{2e80}'..'\u{fe4f}' } // chinese
+        unicode = _{ '\u{00A0}'..'\u{ffff}' }
 string = @{ "\"" ~ inner ~ "\"" }
 boolean = @{"false"|"true"}
 inner = _{ char* }
