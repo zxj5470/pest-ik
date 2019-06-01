@@ -7,7 +7,7 @@ use pest::error::Error;
 use pest::Parser;
 
 #[derive(Parser)]
-#[grammar = "ik.pest"]
+#[grammar = "../ik.pest"]
 pub struct IKParser;
 
 
