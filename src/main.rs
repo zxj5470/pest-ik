@@ -54,7 +54,7 @@ pub fn parse(source: &str) -> Result<Vec<AstNode>, Error<Rule>> {
     let pairs = IKParser::parse(Rule::program, source)?;
     for pair in pairs {
         match pair.as_rule() {
-            Rule::assgmtExpr => {
+            Rule::assignExpr => {
                 ast.push(build_ast_from_expr(pair));
             }
             Rule::declStmt => {
@@ -155,7 +155,7 @@ fn build_ast_from_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
             }
         }
 
-        Rule::assgmtExpr => {
+        Rule::assignExpr => {
             let mut pair = pair.into_inner();
             let ident = pair.next().unwrap();
             let expr = pair.next().unwrap();
@@ -231,16 +231,16 @@ fn build_ast_expr(pair: pest::iterators::Pair<Rule>) -> AstNode {
     if a == None {
         AstNode::None
     } else {
-        let expr = build_ast_from_expr(a.unwrap());
+        let expr_a = build_ast_from_expr(a.unwrap());
         let op = inner_par.next();
         if op == None {
-            expr
+            expr_a
         } else {
             let opstr = op.unwrap().as_str();
             let b = inner_par.next().unwrap();
             let expr_b = build_ast_from_expr(b);
             AstNode::Infix {
-                a: Box::new(expr),
+                a: Box::new(expr_a),
                 op: String::from(opstr),
                 b: Box::new(expr_b),
             }
