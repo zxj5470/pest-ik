@@ -1,5 +1,5 @@
-program = _{ SOI ~ NEWLINE* ~ (stmt ~ NEWLINE*) * ~ NEWLINE? ~ EOI }
-
+program = _{ SOI ~ block ~ NEWLINE? ~ EOI }
+    block = _{NEWLINE* ~ (stmt ~ NEWLINE*) *}
 COMMENT = _{ lineComment | blockComment }
     lineComment = _{"//" ~ (!"\n" ~ ANY)*}
     blockComment = _{ "/*" ~ (blockComment | !"*/" ~ ANY)* ~ "*/" }
@@ -8,7 +8,8 @@ stmt = _{
     assignExpr |
     declStmt |
     curryCall |
-    functionCall
+    functionCall |
+    functionDecl
 }
 
 expr = {
@@ -27,7 +28,7 @@ functionCall = { functionCaller? ~ ident ~ "(" ~ exprList? ~ ")"}
 
 rValue = _{ decimal | integer | string | boolean | ident }
 infixExpr = {rValue ~ (infixChar ~ expr)?}
-isExpr  = {infixExpr ~ "is" ~ ident}
+isExpr = {infixExpr ~ "is" ~ ident}
 infixChar = @{"+"|"-"|"*"|"/"|"^"|">"|"<"|"=="|"!="}
 // infixExpr = {rValue ~ (infixChar ~ rValue)*}
 
@@ -38,15 +39,35 @@ assignExpr = { ident ~ ("=" ~ expr)+ }
 declStmt = { modifier ~ ident ~ typeNotation? ~ "=" ~ expr}
     modifier = {("var"|"val")}
 
+functionDecl = {"fun" ~ typeParameters? ~ (receiverType?~ ".")? ~ ident ~ ("(" ~ paramList? ~ ")") ~
+    functionBody/*block*/ | functionExpr
+}
+    functionBody = {"{" ~ block ~ "}"}
+    functionExpr = {" = " ~ expr}
+    paramList = {typeParameter*}
+    receiverType = _{parenthesizedType | nullableType | typeReference}
+    typ = {nullableType|parenthesizedType|typeReference} /*type*/
+        typeParameters = _{ "<" ~ typeParameter ~ ("," ~ typeParameter )* ~ ">"}
+        typeParameter = _{ident ~ (":" ~ typ)?}
+        parenthesizedType = _{"(" ~ typ ~ ")"}
+        nullableType = _{(typeReference|parenthesizedType)~"?"+}
+
+    typeReference = _{userType}
+        userType = _{ simpleUserType ~ ("." ~ simpleUserType)*}
+        simpleUserType = _{ident ~ typeArguments?}
+        typeArguments = _{"<" ~ typeProjection ~ ("," ~ typeProjection)* ~">"}
+        typeProjection =_{ typ | "*"}
+
 integer = @{ ASCII_DIGIT+ }
-decimal = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* ~("f"|"F")? }
-ident = @{ ("`"~ unescaped ~"`") | regularPart  }
+decimal = @{ ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT* ~ ("f"|"F")? }
+ident = @{ _ident~("."~_ident)* }
+    _ident = _{("`" ~ unescaped ~ "`") | regularPart}
     unescaped = _{ (simpleChar | ASCII_DIGIT | singleChar )*} // but Kotlin doesn't support an indentifier with `:`
-        simpleChar = _{ "!" | '#'..'/'/*35-47*/ | '<'..'?'/*58-63*/ | '['..'^' | '{'..'~'}
+    simpleChar = _{ "!" | '#'..'/'/*35-47*/ | '<'..'?'/*58-63*/ | '['..'^' | '{'..'~'}
     regularPart = _{ singleChar ~ ( ASCII_DIGIT | singleChar)*}
-    singleChar = _{ASCII_ALPHA | "_"|  unicode}
-//         unicode = _{ '\u{2e80}'..'\u{fe4f}' } // chinese
-        unicode = _{ '\u{00A0}'..'\u{ffff}' }
+    singleChar = _{ASCII_ALPHA | "_"| unicode}
+// unicode = _{ '\u{2e80}'..'\u{fe4f}' } // chinese
+    unicode = _{ '\u{00A0}'..'\u{ffff}' }
 string = @{ "\"" ~ inner ~ "\"" }
 boolean = @{"false"|"true"}
 inner = _{ char* }

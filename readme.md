@@ -4,7 +4,8 @@
 因此他应该是 Kotlin 语法的一个子集，但也许会添加部分不兼容特性。
 之后应该会添加编译器后端……
 (你看那个样例的文件名是 `sample.kt`)
-
+See: [Kotlin grammar](https://kotlinlang.org/docs/reference/grammar.html)
+ 
 > This is a compiler front-end project based on Rust and pest packages, which implements a simplified Kotlin syntax, 
 > after which the compiler back end should be added.
 > So it should be a subset of the Kotlin syntax, but it may add some incompatible features.

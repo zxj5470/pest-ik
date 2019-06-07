@@ -27,6 +27,14 @@ var dbl = 4.66
 //y = 1
 ice1000.xyy.tzxjcsbz()
 xyy.tzxjcsbz()
-xyy.tzxjcsbz(emmmm,huaQ)
+xyy.tzxjcsbz(emmmm,huaQ) // exprList AST unfinished.
 println(23333)
+
+// AST unfinished, but parser finished.
 csbz()()
+
+fun main(args:Array<String>?){
+    println(23333)
+    val a = 1
+    println(23333)
+}
